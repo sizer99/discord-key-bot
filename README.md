@@ -5,13 +5,13 @@ This is a simple golang bot for a discord server that will let members /add spar
 
 The commands are:
 
-/add - This will open a popup dialog to enter a new game and its key
+`/add` - This will open a popup dialog to enter a new game and its key
 
-/search [match] - search the game database for anything that matches
+`/search [match]` - search the game database for anything that matches
 
-/list - print a list of all games in the database
+`/list` - print a list of all games in the database
 
-/take - take a key
+`/take` - take a key
 
 Currently, the bot can recognize Steam, Uplay, Origin, PS3, GOG, and URLs. Any other key will be stored as an 'unknown' type.  If a key is Steam or GOG, it will also generate a redemption link on a key `take`.  It remembers who donated each key so they get proper credit.
 
