@@ -5,13 +5,10 @@ This is a simple golang bot for a discord server that will let members /add spar
 
 The commands are:
 
-`/add` - This will open a popup dialog to enter a new game and its key
-
-`/search [match]` - search the game database for anything that matches
-
-`/list` - print a list of all games in the database
-
-`/take` - take a key
+- `/add` - This will open a popup dialog to enter a new game and its key
+- `/search [match]` - search the game database for anything that matches
+- `/list` - print a list of all games in the database
+- `/take [match]` - take a key matching game [match]
 
 Currently, the bot can recognize Steam, Uplay, Origin, PS3, GOG, and URLs. Any other key will be stored as an 'unknown' type.  If a key is Steam or GOG, it will also generate a redemption link on a key `take`.  It remembers who donated each key so they get proper credit.
 
@@ -19,19 +16,19 @@ Finally, the bot supports searching with /search string, comparing a search subs
 
 If you wish to limit user access this can now be done via discord server controls in the integration section. From there you can limit to channels and user roles for any of the commands or the bot itself.
 
-This was originally written by ezelkow1 on github, and that is archved. I (sizer99) installed it, liked its simplicity, but made a few cosmetic changes, so I've forked it. You can always install the original if you don't like them!  Note - I do NOT actually know golang. But I know enough other C-like languages to be able to mod this.
+This was originally written by ezelkow1 on github, and that is archived. I (sizer99) installed it, liked its simplicity, but made a few cosmetic changes, so I've forked it. You can always install the original if you don't like them!  Note - I do NOT actually know golang. But I know enough other C-like languages to be able to mod this.
 
 # Installation
 
 - Download this by grabbing a zip or `git clone https://github.com/sizer99/discord-key-bot`
-- Start a text file to hold all the stuff you're going to need to copy!
+- Start editing a text file to hold all the stuff you're going to need to copy!
 
 - Set up Bot on Discord
   - Go to the Discord Developer Applications Portal - https://discord.com/developers/applications - and log in with your discord account.
   - Click 'New Application' in the upper right.
   - Enter a bot name (like 'keybot'), click the checkbox, and Create.
   - Copy the Application ID and save it.
-  -  Click 'Bot' on the left, then 'Reset Token'.  Copy the Token and save it, you can never see it again!
+  - Click 'Bot' on the left, then 'Reset Token'.  Copy the Token and save it, you can never see it again!
   - Click 'OAuth2' on the left, scroll down to OAuth2 URL Generator. 
   - Under 'Scopes' check 'applications.comands' (near the end) and 'bot' (near the start).
   - Under 'Bot Permissions' check 'Send Messages', 'Use Slash Commands', and 'Manage Messages'.
@@ -76,7 +73,6 @@ This was originally written by ezelkow1 on github, and that is archved. I (sizer
 |             | change /search and /list to use code blocks for aligned output |
 |             | cut down on amount of messages /list and /search send (don't send separate count) |
 |             | add # Installation section to README.md |
-
 
 
 # Archiving Old Version
