@@ -164,11 +164,13 @@ func main() {
 				panic(err)
 			}
 
-			numkey := AddGame(data.Components[0].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput).Value,
-				data.Components[1].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput).Value,
-				member.User.Username)
+
+			numkey, service := AddGame(data.Components[0].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput).Value,
+								data.Components[1].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput).Value,
+								member.User.Username)
 			if numkey > 0 {
-				embedslice = append(embedslice, NewEmbed().SetTitle("All Praise "+member.User.Username).SetColor(embedColor).SetDescription("Thanks "+member.User.Username+" for adding a key for "+
+				embedslice = append(embedslice, NewEmbed().SetTitle("Thank You "+member.User.Username).SetColor(embedColor).SetDescription("Thanks "+member.User.Username+
+					" for adding a " + service + " key for "+
 					data.Components[0].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput).Value+". There are now "+strconv.Itoa(numkey)+
 					" keys for "+data.Components[0].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput).Value).MessageEmbed)
 			} else {
@@ -253,14 +255,20 @@ func checkDB() {
 func list(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	list, num := ListKeys()
 	var embedslice []*discordgo.MessageEmbed
-	embedslice = append(embedslice, NewEmbed().SetTitle("Game List").AddField("Total Games", strconv.Itoa(num+1)).SetColor(embedColor).MessageEmbed)
-	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Embeds: embedslice,
-			Flags:  discordgo.MessageFlagsEphemeral,
-		},
-	})
+	first := true
+
+	if len(list) == 0 {
+		embedslice = append(embedslice, NewEmbed().AddField("Empty Database", "No Games in Database").SetColor(embedColor).MessageEmbed)
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Embeds: embedslice,
+				Flags:  discordgo.MessageFlagsEphemeral,
+			},
+		})
+		return
+	}
+
 
 	split_list := strings.Split(list, "\n")
 	k := 0
@@ -271,10 +279,21 @@ func list(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 		if k == 20 {
 			embedslice = append(embedslice, NewEmbed().AddField("Search Results", buffer.String()).SetColor(embedColor).MessageEmbed)
-			s.FollowupMessageCreate(i.Interaction, true, &discordgo.WebhookParams{
-				Embeds: embedslice,
-				Flags:  discordgo.MessageFlagsEphemeral,
-			})
+			if first {
+				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+					Type: discordgo.InteractionResponseChannelMessageWithSource,
+					Data: &discordgo.InteractionResponseData{
+					Embeds: embedslice,
+					Flags:  discordgo.MessageFlagsEphemeral,
+					},
+				})
+				first = false
+			} else {
+				s.FollowupMessageCreate(i.Interaction, true, &discordgo.WebhookParams{
+					Embeds: embedslice,
+					Flags:  discordgo.MessageFlagsEphemeral,
+				})
+			}
 			buffer.Reset()
 			k = 0
 			embedslice = nil
@@ -285,11 +304,22 @@ func list(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		embedslice = append(embedslice, NewEmbed().AddField("Search Results", buffer.String()).SetColor(embedColor).MessageEmbed)
 		buffer.Reset()
 
-		s.FollowupMessageCreate(i.Interaction, true, &discordgo.WebhookParams{
-			Embeds: embedslice,
-			Flags:  discordgo.MessageFlagsEphemeral,
-		})
+		if first {
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+				Embeds: embedslice,
+				Flags:  discordgo.MessageFlagsEphemeral,
+				},
+			})
+		} else {
+			s.FollowupMessageCreate(i.Interaction, true, &discordgo.WebhookParams{
+				Embeds: embedslice,
+				Flags:  discordgo.MessageFlagsEphemeral,
+			})
+		}
 	}
+	k = k + num // just to shut it up about num being unused
 }
 
 func add(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -362,7 +392,7 @@ func search(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	if !foundgame {
-		embedslice = append(embedslice, NewEmbed().AddField("Search Results", "No Matches Found").SetColor(embedColor).MessageEmbed)
+		embedslice = append(embedslice, NewEmbed().AddField("Search Results", "`No Matches Found`").SetColor(embedColor).MessageEmbed)
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
@@ -373,50 +403,61 @@ func search(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	}
 
-	embedslice = append(embedslice, NewEmbed().AddField("Search Results", ".....").SetColor(embedColor).MessageEmbed)
-	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Embeds: embedslice,
-			Flags:  discordgo.MessageFlagsEphemeral,
-		},
-	})
-
 	embedslice = nil
 
 	sort.Strings(keys)
 	var buffer bytes.Buffer
+	fmt.Fprintf( &buffer, "```%-2s %-6s %-40s\n", "Ct", "Store", "Game" )
 	k := 0
+	first := true
 	for j := range keys {
-		buffer.WriteString(x[keys[j]][0].GameName)
-		buffer.WriteString(" (")
-		buffer.WriteString(getGameServiceString(x[keys[j]][0].Serial))
-		buffer.WriteString(")")
-		buffer.WriteString(": ")
-		buffer.WriteString(strconv.Itoa(len(x[keys[j]])))
-		buffer.WriteString(" keys\n")
+		fmt.Fprintf( &buffer, "%2d %-6s %-40s\n", len(x[keys[j]]), getGameServiceString(x[keys[j]][0].Serial), x[keys[j]][0].GameName )
 		k++
 
 		if k == 20 {
+			buffer.WriteString( "```" )
 			embedslice = append(embedslice, NewEmbed().AddField("Search Results", buffer.String()).SetColor(embedColor).MessageEmbed)
-			s.FollowupMessageCreate(i.Interaction, true, &discordgo.WebhookParams{
-				Embeds: embedslice,
-				Flags:  discordgo.MessageFlagsEphemeral,
-			})
+			if first {
+				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+					Type: discordgo.InteractionResponseChannelMessageWithSource,
+					Data: &discordgo.InteractionResponseData{
+						Embeds: embedslice,
+					Flags:  discordgo.MessageFlagsEphemeral,
+					},
+				})
+				first = false
+			} else {
+				s.FollowupMessageCreate(i.Interaction, true, &discordgo.WebhookParams{
+					Embeds: embedslice,
+					Flags:  discordgo.MessageFlagsEphemeral,
+				})
+			}
 			buffer.Reset()
+			fmt.Fprintf( &buffer, "```%-2s %-6s %-40s\n", "Ct", "Store", "Game" )
 			k = 0
 			embedslice = nil
 		}
 	}
 
 	if k != 0 {
+		buffer.WriteString( "```" )
 		embedslice = append(embedslice, NewEmbed().AddField("Search Results", buffer.String()).SetColor(embedColor).MessageEmbed)
 		buffer.Reset()
-
-		s.FollowupMessageCreate(i.Interaction, true, &discordgo.WebhookParams{
-			Embeds: embedslice,
-			Flags:  discordgo.MessageFlagsEphemeral,
-		})
+		if first {
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Embeds: embedslice,
+				Flags:  discordgo.MessageFlagsEphemeral,
+				},
+			})
+		
+		} else {
+			s.FollowupMessageCreate(i.Interaction, true, &discordgo.WebhookParams{
+				Embeds: embedslice,
+				Flags:  discordgo.MessageFlagsEphemeral,
+			})
+		}
 	}
 
 }
@@ -534,24 +575,20 @@ func ListKeys() (string, int) {
 
 	// Build the output message
 	var buffer bytes.Buffer
+	fmt.Fprintf( &buffer, "```%-2s %-6s %-40s\n", "Ct", "Store", "Game" )
 
 	i := 0
 	for i = range keys {
-		buffer.WriteString(x[keys[i]][0].GameName)
-		buffer.WriteString(" (")
-		buffer.WriteString(getGameServiceString(x[keys[i]][0].Serial))
-		buffer.WriteString(")")
-		buffer.WriteString(" : ")
-		buffer.WriteString(strconv.Itoa(len(x[keys[i]])))
-		buffer.WriteString(" keys\n")
+		fmt.Fprintf( &buffer, "%2d %-6s %-40s\n", len(x[keys[i]]), getGameServiceString(x[keys[i]][0].Serial), x[keys[i]][0].GameName )
 	}
+	buffer.WriteString( "```" )
 	return buffer.String(), i
 }
 
 // AddGame will add a new key to the db
 // It will also check to see if the key was put in the
 // broadcast chan, remove if necessary
-func AddGame(name string, inkey string, user string) int {
+func AddGame(name string, inkey string, user string) ( int, string ) {
 
 	// Strip the cmd, split off key from regex and grab name
 	gamename := strings.TrimSpace(name)
@@ -571,7 +608,7 @@ func AddGame(name string, inkey string, user string) int {
 	//Check if key already exists
 	for i := range x[normalized] {
 		if thiskey.Serial == x[normalized][i].Serial {
-			return 0
+			return 0, thiskey.ServiceType
 		}
 	}
 
@@ -579,5 +616,5 @@ func AddGame(name string, inkey string, user string) int {
 	x[normalized] = append(x[normalized], thiskey)
 
 	Save(config.DbFile, &x)
-	return len(x[normalized])
+	return len(x[normalized]), thiskey.ServiceType
 }
