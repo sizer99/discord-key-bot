@@ -1,5 +1,4 @@
 # discord-key-bot
-![Go](https://github.com/ezelkow1/discord-key-bot/workflows/Go/badge.svg?branch=master)
 
 This is a simple golang bot for a discord server that will let members /add spare keys from Steam, Uplay, Origin, GOG, etc. Even URLs for bundles. Then other members can /take keys as they want. It has no rate limits - it is very simple and assumes you trust your users. But you can only let certain roles /take keys if you want.
 
@@ -17,6 +16,12 @@ Finally, the bot supports searching with /search string, comparing a search subs
 If you wish to limit user access this can now be done via discord server controls in the integration section. From there you can limit to channels and user roles for any of the commands or the bot itself.
 
 This was originally written by ezelkow1 on github, and that is archived. I (sizer99) installed it, liked its simplicity, but made a few cosmetic changes, so I've forked it. You can always install the original if you don't like them!  Note - I do NOT actually know golang. But I know enough other C-like languages to be able to mod this.
+
+# NOTE - This is now archived as well
+
+After forking this repository and making a few changes I decided I don't really like golang and just ported the whole thing to python. It's much cleaner and nicer and does a lot more.
+
+You can find it at https://codeberg.org/sizer99/py-disc-key-wrangler .
 
 # Installation
 
@@ -69,7 +74,7 @@ This was originally written by ezelkow1 on github, and that is archived. I (size
 | Date | Changes |
 | ---  | --- |
 | 2026 May 24 | Forked ezelkow1's archive |
-| 2026 May 24 | /add message now says what store the key was IDed as |
+|      | /add message now says what store the key was IDed as |
 |             | change /search and /list to use code blocks for aligned output |
 |             | cut down on amount of messages /list and /search send (don't send separate count) |
 |             | add # Installation section to README.md |
